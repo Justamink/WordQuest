@@ -27,13 +27,13 @@ except Exception as e:  # noqa: BLE001
 # ---- Quick row counts ----
 st.subheader("Table Row Counts")
 TABLES = [
-    "student", "course", "classsection", "topic", "practiceunit",
-    "exercise", "answerchoice", "studentprogress", "badge", "student_badge",
+    "Student", "Course", "ClassSection", "Topic", "PracticeUnit",
+    "Exercise", "AnswerChoice", "StudentProgress", "Badge", "StudentBadge",
 ]
 counts = []
 for t in TABLES:
     try:
-        n = query(f"SELECT COUNT(*) AS n FROM {t};")[0]["n"]
+        n = query(f'SELECT COUNT(*) AS n FROM "{t}";')[0]["n"]
         counts.append({"table": t, "rows": n})
     except Exception:  # table name may differ in your schema
         counts.append({"table": t, "rows": "n/a"})
@@ -45,11 +45,11 @@ st.markdown(
     """
 | Screen | What you can do | Scenario |
 |---|---|---|
-| Practice | Answer a multiple-choice or free-response question | S1 |
+| Practice | View and answer multiple-choice or free-response questions | S1 |
 | Add Exercise | Add a question and its answer options | S2 |
-| Badges | Award a badge to a student and view earned badges | S3 |
-| Grade Answers | Mark free-response answers correct or incorrect | (Update) |
-| Manage Exercises | Search exercises and delete one | (Read / Delete) |
+| Badges | Award a badge to a student and view earned badges | Additional feature |
+| Grade Answers | Review free-response answers | Additional feature |
+| Manage Exercises | Search exercises and delete one | S4 |
 
 Use the sidebar to navigate.
 """

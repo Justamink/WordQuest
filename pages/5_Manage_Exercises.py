@@ -8,16 +8,23 @@ st.title("🗂️ Manage Exercises")
 
 # ---------------- SQL ----------------
 SEARCH_SQL = """
-SELECT e.exercise_id, e.question_text, e.question_type, u.unit_name,
-       (SELECT COUNT(*) FROM answerchoice a WHERE a.exercise_id = e.exercise_id) AS num_choices,
-       (SELECT COUNT(*) FROM studentprogress sp WHERE sp.exercise_id = e.exercise_id) AS num_attempts
-FROM exercise e
-JOIN practiceunit u ON u.unit_id = e.unit_id
+SELECT e.exercise_id, e.question_text, e.question_type,
+       u.title AS unit_name,
+       (SELECT COUNT(*)
+        FROM "AnswerChoice" a
+        WHERE a.exercise_id = e.exercise_id) AS num_choices,
+       (SELECT COUNT(*)
+        FROM "StudentProgress" sp
+        WHERE sp.exercise_id = e.exercise_id) AS num_attempts
+FROM "Exercise" e
+JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
 WHERE e.question_text ILIKE %s
 ORDER BY e.exercise_id;
 """
 
-DELETE_SQL = "DELETE FROM exercise WHERE exercise_id = %s;"
+DELETE_SQL = """
+DELETE FROM "Exercise" WHERE exercise_id = %s;
+"""
 
 if "flash" in st.session_state:
     st.success(st.session_state.pop("flash"))
