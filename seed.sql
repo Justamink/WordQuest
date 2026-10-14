@@ -66,17 +66,83 @@ INSERT INTO "Streak" (student_id, current_streak, longest_streak, last_practice_
 (19, 12, 15, '2022-06-19'),
 (20, 19, 14, '2022-08-21');
 
-INSERT INTO "Badge" (name, description, badge_type, requirement_value) VALUES
-('5_day_streak', 'Earn a 5-day streak', 'streak', 5),
-('10_day_streak', 'Earn a 10-day streak', 'streak', 10),
-('15_day_streak', 'Earn a 15-day streak', 'streak', 15),
-('25_day_streak', 'Earn a 25-day streak', 'streak', 25),
-('50_day_streak', 'Earn a 50-day streak', 'streak', 50),
-('answer_100_questions', 'Answer a total of 100 questions', 'questions', 100),
-('answer_500_questions', 'Answer a total of 500 questions', 'questions', 500), 
-('answer_20_questions_correctly', 'Correctly answer a total of 20 questions', 'questions', 20),
-('answer_50_questions_correctly', 'Correctly answer a total of 50 questions', 'questions', 50),
-('answer_100_questions_correctly', 'Correctly answer a total of 100 questions', 'questions', 100);
+INSERT INTO "Course" (course_code, course_name) VALUES
+('ENGL 1004', 'Books, Libraries, Archives'),
+('ENGL 1105', 'First-Year Writing'),
+('ENGL 1106', 'First-Year Writing'),
+('ENGL 1504', 'Introduction to Contemporary Linguistics'),
+('ENGL 1514', 'Language and Society'),
+('ENGL 1524', 'Language and the Mind'),
+('ENGL 1604', 'Introduction to Poetry'),
+('ENGL 1614', 'Introduction to Short Fiction'),
+('ENGL 1624', 'Introduction to Detective Fiction'),
+('ENGL 1634', 'Introduction to Shakespeare'),
+('ENGL 1654', 'Introduction to Science Fiction and Fantasy'),
+('ENGL 1664', 'Introduction to Womens Literature'),
+('ENGL 1704', 'The Harry Potter Phenomenon'),
+('ENGL 1714', 'True Crime Stories in American Culture'),
+('ENGL 2014', 'Food Writing'),
+('ENGL 2024', 'AI, Creativity, and the Art of Being Human'),
+('ENGL 2034', 'Analyzing the Sounds of Language'),
+('ENGL 2434', 'Legends of King Arthur'),
+('ENGL 2444', 'Ancient Greek and Roman Mythology'),
+('ENGL 2534', 'American Literary History');
+
+INSERT INTO "ClassSection" (CRN, course_id, section_number, semester, year, teacher_id) VALUES
+(374879, 1, 313, 'Summer 1', 2023, 2),
+(588430, 1, 1018, 'Fall', 2021, 15),
+(671402, 2, 1374, 'Spring', 2013, 15),
+(457703, 3, 1528, 'Spring', 2013, 4),
+(429184, 5, 1059, 'Summer 1', 2013, 8),
+(328972, 6, 1546, 'Spring', 2016, 2),
+(422510, 7, 1520, 'Spring', 2018, 16),
+(638482, 6, 1445, 'Summer 2', 2019, 1),
+(657679, 7, 1325, 'Winter', 2021, 17),
+(394766, 10, 1833, 'Fall', 2017, 5),
+(585638, 11, 1126, 'Spring', 2018, 5),
+(660211, 9, 876, 'Winter', 2025, 10),
+(673266, 10, 413, 'Summer 2', 2013, 18),
+(422412, 14, 1705, 'Spring', 2015, 13),
+(464818, 15, 1163, 'Fall', 2017, 16),
+(306528, 16, 266, 'Winter', 2011, 14),
+(627530, 17, 357, 'Winter', 2015, 5),
+(622172, 17, 1584, 'Summer 1', 2022, 15),
+(617845, 18, 584, 'Winter', 2018, 8),
+(506393, 19, 1072, 'Summer 2', 2025, 1);
+
+INSERT INTO "Topic" (class_id, name, description, display_order) VALUES
+(1, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
+(2, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
+(3, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
+(6, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
+(14, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of prose, etc.', 2),
+(3, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of a story, etc.', 2),
+(10, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of a story, etc.', 2),
+(18, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of a story, etc.', 2),
+(6, 'Writing', 'Prose, literary devices, etc', 3),
+(8, 'Writing', 'Prose, literary devices, etc', 3),
+(9, 'Writing', 'Prose, literary devices, etc', 3),
+(13, 'Writing', 'Prose, literary devices, etc', 3),
+(17, 'Writing', 'Prose, literary devices, etc', 3),
+(10, 'Vocabulary', 'Learning the meaning of and spelling new words', 4),
+(18, 'Vocabulary', 'Learning the meaning of and spelling new words', 4),
+(9, 'Vocabulary', 'Learning the meaning of and spelling new words', 4),
+(11, 'Vocabulary', 'Learning the meaning of and spelling new words', 4),
+(17, 'Citing and research', 'How to find and cite quality sources', 5),
+(7, 'Citing and research', 'How to find and cite quality sources', 5),
+(19, 'Citing and research', 'How to find and cite quality sources', 5);
+
+INSERT INTO "Badge" (topic_id, name, description, badge_type, requirement_value) VALUES
+(1, '5_day_streak', 'Earn a 5-day streak', 'streak', 5),
+(2, '10_day_streak', 'Earn a 10-day streak', 'streak', 10),
+(3, '15_day_streak', 'Earn a 15-day streak', 'streak', 15),
+(4, '25_day_streak', 'Earn a 25-day streak', 'streak', 25),
+(5, '50_day_streak', 'Earn a 50-day streak', 'streak', 50),
+(6, 'answer_100_questions', 'Answer a total of 100 questions', 'questions', 100),
+(7, 'answer_500_questions', 'Answer a total of 500 questions', 'questions', 500), 
+(8, 'answer_20_questions_correctly', 'Correctly answer a total of 20 questions', 'questions', 20),
+(9, 'answer_50_questions_correctly', 'Correctly answer a total of 50 questions', 'questions', 50),
+(10, 'answer_100_questions_correctly', 'Correctly answer a total of 100 questions', 'questions', 100);
 
 
 INSERT INTO "StudentBadge" (student_id, badge_id, earned_at) VALUES
@@ -101,49 +167,8 @@ INSERT INTO "StudentBadge" (student_id, badge_id, earned_at) VALUES
 (4, 2, '2026-09-17'),
 (13, 7, '2024-10-28');  
 
-INSERT INTO "ClassSection" (CRN, course_code, section_number, semester, year, teacher_id) VALUES
-(374879, 'ENGL 5001', 313, 'Summer 1', 2023, 2),
-(588430, 'ENGL 1001', 1018, 'Fall', 2021, 15),
-(671402, 'ENGL 5001', 1374, 'Spring', 2013, 15),
-(457703, 'ENGL 5002', 1528, 'Spring', 2013, 4),
-(429184, 'ENGL 3001', 1059, 'Summer 1', 2013, 8),
-(328972, 'ENGL 2002', 1546, 'Spring', 2016, 2),
-(422510, 'ENGL 2002', 1520, 'Spring', 2018, 16),
-(638482, 'ENGL 1002', 1445, 'Summer 2', 2019, 1),
-(657679, 'ENGL 2001', 1325, 'Winter', 2021, 17),
-(394766, 'ENGL 4002', 1833, 'Fall', 2017, 5),
-(585638, 'ENGL 1001', 1126, 'Spring', 2018, 5),
-(660211, 'ENGL 1001', 876, 'Winter', 2025, 10),
-(673266, 'ENGL 3002', 413, 'Summer 2', 2013, 18),
-(422412, 'ENGL 3001', 1705, 'Spring', 2015, 13),
-(464818, 'ENGL 1002', 1163, 'Fall', 2017, 16),
-(306528, 'ENGL 5001', 266, 'Winter', 2011, 14),
-(627530, 'ENGL 3001', 357, 'Winter', 2015, 5),
-(622172, 'ENGL 5002', 1584, 'Summer 1', 2022, 15),
-(617845, 'ENGL 3001', 584, 'Winter', 2018, 8),
-(506393, 'ENGL 4002', 1072, 'Summer 2', 2025, 1);
 
-INSERT INTO "Topic" (class_id, name, description, display_order) VALUES
-(1, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
-(2, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
-(3, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
-(6, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
-(14, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of prose, etc.', 2),
-(3, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of a story, etc.', 2),
-(10, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of a story, etc.', 2),
-(18, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of a story, etc.', 2),
-(6, 'Writing', 'Prose, literary devices, etc', 3),
-(8, 'Writing', 'Prose, literary devices, etc', 3),
-(9, 'Writing', 'Prose, literary devices, etc', 3),
-(13, 'Writing', 'Prose, literary devices, etc', 3),
-(17, 'Writing', 'Prose, literary devices, etc', 3),
-(10, 'Vocabulary', 'Learning the meaning of and spelling new words', 4),
-(18, 'Vocabulary', 'Learning the meaning of and spelling new words', 4),
-(9, 'Vocabulary', 'Learning the meaning of and spelling new words', 4),
-(11, 'Vocabulary', 'Learning the meaning of and spelling new words', 4),
-(17, 'Citing and research', 'How to find and cite quality sources', 5),
-(7, 'Citing and research', 'How to find and cite quality sources', 5),
-(19, 'Citing and research', 'How to find and cite quality sources', 5);
+
 
 INSERT INTO "Enrollment" (student_id, class_id, enrollment_date, status) VALUES
 (17, 12, '2024-03-13', 'inactive'),

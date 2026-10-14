@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS public."ClassSection"
 (
     class_id SERIAL NOT NULL,
     CRN integer NOT NULL,
-    course_code text NOT NULL,
+    course_id integer NOT NULL,
     section_number integer NOT NULL,
     semester text NOT NULL,
     year integer NOT NULL,
@@ -170,6 +170,13 @@ ALTER TABLE IF EXISTS public."Badge"
 ALTER TABLE IF EXISTS public."ClassSection"
     ADD CONSTRAINT teacher_id FOREIGN KEY (teacher_id)
     REFERENCES public."Teacher" (teacher_id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+ALTER TABLE IF EXISTS public."ClassSection"
+    ADD CONSTRAINT course_id FOREIGN KEY (course_id)
+    REFERENCES public."Course" (course_id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
