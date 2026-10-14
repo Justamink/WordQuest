@@ -1,4 +1,4 @@
-"""S1: A student views and answers a question (Read + Insert)."""
+"""S1: A student views questions in a practice unit (Read/Search)."""
 import streamlit as st
 
 from db import query, execute, friendly_error
@@ -21,13 +21,22 @@ JOIN "Course" c ON c.course_id = cs.course_id
 ORDER BY c.course_code, t.name;
 """
 
+# Get practice units belonging to the selected topic.
+UNITS_SQL = """
+SELECT unit_id, title AS unit_name
+FROM "PracticeUnit"
+WHERE topic_id = %s
+ORDER BY title;
+"""
+
+# Get exercises belonging to the selected practice unit.
 EXERCISES_SQL = """
 SELECT e.exercise_id, e.question_text, e.question_type,
        u.title AS unit_name
 FROM "Exercise" e
 JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
-WHERE u.topic_id = %s
-ORDER BY u.title, e.exercise_id;
+WHERE u.unit_id = %s
+ORDER BY e.exercise_id;
 """
 
 CHOICES_SQL = """
@@ -95,7 +104,9 @@ if not students:
     st.stop()
 
 student = st.selectbox(
-    "Who is answering?", students, format_func=lambda s: s["name"]
+    "Who is answering?",
+    students,
+    format_func=lambda s: s["name"]
 )
 
 topics = load(TOPICS_SQL)
@@ -109,9 +120,22 @@ topic = st.selectbox(
     format_func=lambda t: f"{t['course_code']} - {t['topic_name']}",
 )
 
-exercises = load(EXERCISES_SQL, (topic["topic_id"],))
+# Select a practice unit within the chosen topic.
+units = load(UNITS_SQL, (topic["topic_id"],))
+if not units:
+    st.info("No practice units in this topic yet.")
+    st.stop()
+
+unit = st.selectbox(
+    "Practice unit",
+    units,
+    format_func=lambda u: u["unit_name"],
+)
+
+# Only display exercises from the selected practice unit.
+exercises = load(EXERCISES_SQL, (unit["unit_id"],))
 if not exercises:
-    st.info("No exercises in this topic yet.")
+    st.info("No exercises in this practice unit yet.")
     st.stop()
 
 exercise = st.selectbox(
@@ -129,7 +153,10 @@ with st.form("answer_form"):
         choices = load(CHOICES_SQL, (exercise["exercise_id"],))
         labels = {c["choice_id"]: c["choice_text"] for c in choices}
         choice_id = st.radio(
-            "Pick one:", list(labels), format_func=lambda cid: labels[cid], index=None
+            "Pick one:",
+            list(labels),
+            format_func=lambda cid: labels[cid],
+            index=None
         )
     else:
         free_text = st.text_area("Your answer")
