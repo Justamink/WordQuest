@@ -10,7 +10,7 @@ st.title("🗂️ Manage Exercises")
 SEARCH_SQL = """
 SELECT e.exercise_id, e.question_text, e.question_type,
        e.difficulty, e.points, e.free_response_answer,
-       u.title AS unit_name,
+       u.unit_id, u.title AS unit_name,
        (SELECT COUNT(*)
         FROM "AnswerChoice" a
         WHERE a.exercise_id = e.exercise_id) AS num_choices,
@@ -20,7 +20,22 @@ SELECT e.exercise_id, e.question_text, e.question_type,
 FROM "Exercise" e
 JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
 WHERE e.question_text ILIKE %s
+  AND (%s::text IS NULL OR e.question_type = %s::text)
+  AND (%s::text IS NULL OR e.difficulty = %s::text)
+  AND (%s::int IS NULL OR e.unit_id = %s::int)
 ORDER BY e.exercise_id;
+"""
+
+TYPES_SQL = """
+SELECT DISTINCT question_type FROM "Exercise" ORDER BY question_type;
+"""
+
+DIFFICULTIES_SQL = """
+SELECT DISTINCT difficulty FROM "Exercise" ORDER BY difficulty;
+"""
+
+UNITS_SQL = """
+SELECT unit_id, title FROM "PracticeUnit" ORDER BY title, unit_id;
 """
 
 CHOICES_SQL = """
@@ -67,18 +82,67 @@ WHERE exercise_id = %s;
 if "flash" in st.session_state:
     st.success(st.session_state.pop("flash"))
 
-keyword = st.text_input("Search question text")
-
+# Load filter options from the database.
 try:
-    rows = query(SEARCH_SQL, (f"%{keyword}%",))
+    type_options = [r["question_type"] for r in query(TYPES_SQL)]
+    difficulty_options = [r["difficulty"] for r in query(DIFFICULTIES_SQL)]
+    unit_options = query(UNITS_SQL)
 except Exception as e:  # noqa: BLE001
     st.error(friendly_error(e))
     st.stop()
 
+keyword = st.text_input("Search question text")
+
+col_type, col_diff, col_unit = st.columns(3)
+
+with col_type:
+    type_filter = st.selectbox(
+        "Question type",
+        [None] + type_options,
+        format_func=lambda t: "All types" if t is None else t,
+    )
+
+with col_diff:
+    difficulty_filter = st.selectbox(
+        "Difficulty",
+        [None] + difficulty_options,
+        format_func=lambda d: "All difficulties" if d is None else d,
+    )
+
+with col_unit:
+    unit_filter = st.selectbox(
+        "Unit",
+        [None] + [u["unit_id"] for u in unit_options],
+        format_func=lambda uid: (
+            "All units"
+            if uid is None
+            else next(
+                f"{u['title']} (#{u['unit_id']})"
+                for u in unit_options
+                if u["unit_id"] == uid
+            )
+        ),
+    )
+
+try:
+    rows = query(
+        SEARCH_SQL,
+        (
+            f"%{keyword}%",
+            type_filter, type_filter,
+            difficulty_filter, difficulty_filter,
+            unit_filter, unit_filter,
+        ),
+    )
+except Exception as e:  # noqa: BLE001
+    st.error(friendly_error(e))
+    st.stop()
+
+st.caption(f"{len(rows)} exercise(s) found.")
 st.dataframe(rows, hide_index=True, use_container_width=True)
 
 if not rows:
-    st.info("No exercises match your search.")
+    st.info("No exercises match your search and filters.")
     st.stop()
 
 target = st.selectbox(
