@@ -10,17 +10,9 @@ load_dotenv()
 
 
 def get_conn():
-    """Open a new PostgreSQL connection (rows come back as dicts).
-
-    Use as a context manager: the transaction commits on success, rolls back
-    on error, and the connection is closed afterwards.
-    """
+    """Open a connection to the Neon PostgreSQL database."""
     return psycopg.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        port=os.getenv("DB_PORT", "5432"),
-        dbname=os.getenv("DB_NAME", "wordquest"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", ""),
+        os.getenv("DATABASE_URL"),
         row_factory=dict_row,
     )
 

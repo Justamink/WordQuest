@@ -8,22 +8,30 @@ st.title("✅ Grade Answers")
 
 # ---------------- SQL ----------------
 UNGRADED_SQL = """
-SELECT sp.progress_id, s.name, e.question_text, sp.submitted_answer, sp.answered_at
-FROM studentprogress sp
-JOIN student s ON s.student_id = sp.student_id
-JOIN exercise e ON e.exercise_id = sp.exercise_id
-WHERE sp.choice_id IS NULL AND sp.is_correct IS NULL
+SELECT sp.progress_id,
+       s.first_name || ' ' || s.last_name AS name,
+       e.question_text, sp.submitted_answer, sp.answered_at
+FROM "StudentProgress" sp
+JOIN "Student" s ON s.student_id = sp.student_id
+JOIN "Exercise" e ON e.exercise_id = sp.exercise_id
+WHERE e.question_type = 'free_response'
 ORDER BY sp.answered_at;
 """
 
-GRADE_SQL = "UPDATE studentprogress SET is_correct = %s WHERE progress_id = %s;"
+GRADE_SQL = """
+UPDATE "StudentProgress"
+SET is_correct = %s
+WHERE progress_id = %s;
+"""
 
 GRADED_SQL = """
-SELECT sp.progress_id, s.name, e.question_text, sp.submitted_answer, sp.is_correct
-FROM studentprogress sp
-JOIN student s ON s.student_id = sp.student_id
-JOIN exercise e ON e.exercise_id = sp.exercise_id
-WHERE sp.choice_id IS NULL AND sp.is_correct IS NOT NULL
+SELECT sp.progress_id,
+       s.first_name || ' ' || s.last_name AS name,
+       e.question_text, sp.submitted_answer, sp.is_correct
+FROM "StudentProgress" sp
+JOIN "Student" s ON s.student_id = sp.student_id
+JOIN "Exercise" e ON e.exercise_id = sp.exercise_id
+WHERE e.question_type = 'free_response'
 ORDER BY sp.answered_at DESC
 LIMIT 10;
 """
@@ -38,9 +46,9 @@ except Exception as e:  # noqa: BLE001
     st.error(friendly_error(e))
     st.stop()
 
-st.subheader(f"Awaiting review ({len(pending)})")
+st.subheader(f"Free-response answers to review ({len(pending)})")
 if not pending:
-    st.info("Nothing to grade right now.")
+    st.info("No free-response answers to review right now.")
 
 for row in pending:
     with st.container(border=True):
@@ -58,5 +66,5 @@ for row in pending:
                 except Exception as e:  # noqa: BLE001
                     st.error(friendly_error(e))
 
-st.subheader("Recently graded")
+st.subheader("Recent free-response results")
 st.dataframe(graded, hide_index=True, use_container_width=True)
