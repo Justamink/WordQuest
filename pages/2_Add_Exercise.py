@@ -28,6 +28,29 @@ INSERT INTO "AnswerChoice"
 VALUES (%s, %s, %s, %s);
 """
 
+QUESTION_TYPES = [
+    "multiple_choice",
+    "multi_select",
+    "fill_in_blank",
+    "free_response",
+]
+# Values as stored in the database's question_type column.
+DB_TYPE_VALUES = {
+    "multiple_choice": "multiple choice",
+    "multi_select": "multi select",
+    "fill_in_blank": "fill in the blank",
+    "free_response": "free response",
+}
+TYPE_LABELS = {
+    "multiple_choice": "Multiple choice (one correct answer)",
+    "multi_select": "Multi-select (one or more correct answers)",
+    "fill_in_blank": "Fill in the blank (auto-graded)",
+    "free_response": "Free response",
+}
+
+AUTO_GRADED = "Enter a correct answer (auto-graded)"
+MANUAL_GRADED = "No stored answer (grade manually later)"
+
 try:
     units = query(UNITS_SQL)
 except Exception as e:  # noqa: BLE001
@@ -38,45 +61,98 @@ if not units:
     st.info("Create a practice unit first.")
     st.stop()
 
-# Widgets live outside a form so the choice fields can appear/disappear.
+# Widgets live outside a form so the answer fields can appear/disappear.
 unit = st.selectbox(
     "Practice unit", units,
     format_func=lambda u: f"{u['topic_name']} / {u['unit_name']}"
 )
 question = st.text_area("Question")
-qtype = st.selectbox("Question type", ["multiple_choice", "free_response"])
-difficulty = st.text_input("Difficulty", value="easy")
+qtype = st.selectbox(
+    "Question type", QUESTION_TYPES,
+    format_func=lambda t: TYPE_LABELS[t],
+)
+difficulty = st.selectbox("Difficulty", ["easy", "medium", "hard"])
 points = st.number_input("Points", min_value=1, value=10, step=1)
 
 choice_texts = []
-correct_idx = 0
+correct_set = set()          # indexes (0-3) of correct options
 free_response_answer = None
+manual_grading = False
 
-if qtype == "multiple_choice":
+if qtype in ("multiple_choice", "multi_select"):
     st.markdown("**Answer options** (fill at least two)")
     for label in ["A", "B", "C", "D"]:
         choice_texts.append(st.text_input(f"Option {label}", key=f"opt_{label}"))
-    correct_idx = st.radio(
-        "Which option is correct?",
-        [0, 1, 2, 3],
-        format_func=lambda i: f"Option {'ABCD'[i]}",
-        horizontal=True,
+
+    if qtype == "multiple_choice":
+        correct_set = {
+            st.radio(
+                "Which option is correct?",
+                [0, 1, 2, 3],
+                format_func=lambda i: f"Option {'ABCD'[i]}",
+                horizontal=True,
+            )
+        }
+    else:
+        correct_set = set(
+            st.multiselect(
+                "Which options are correct? (select all that apply)",
+                [0, 1, 2, 3],
+                format_func=lambda i: f"Option {'ABCD'[i]}",
+            )
+        )
+
+elif qtype == "fill_in_blank":
+    st.caption(
+        "Use a run of underscores in the question text to mark the blank, "
+        "e.g. \"The past tense of 'run' is ____.\""
     )
-else:
-    free_response_answer = st.text_input("Correct free-response answer")
+    free_response_answer = st.text_input("Correct answer for the blank")
+
+else:  # free_response
+    grading_mode = st.radio(
+        "Grading",
+        [AUTO_GRADED, MANUAL_GRADED],
+        help=(
+            "Manually graded answers are reviewed by a teacher on the "
+            "Grade Answers page."
+        ),
+    )
+    manual_grading = grading_mode == MANUAL_GRADED
+
+    if manual_grading:
+        st.caption(
+            "No correct answer will be stored. Student answers will be "
+            "reviewed on the Grade Answers page."
+        )
+    else:
+        free_response_answer = st.text_input("Correct free-response answer")
 
 if st.button("Add exercise"):
     filled = [(i, t.strip()) for i, t in enumerate(choice_texts) if t.strip()]
+    filled_idx = {i for i, _ in filled}
+
     if not question.strip():
         st.warning("Please enter a question.")
-    elif not difficulty.strip():
-        st.warning("Please enter a difficulty.")
-    elif qtype == "multiple_choice" and len(filled) < 2:
-        st.warning("A multiple-choice question needs at least two options.")
-    elif qtype == "multiple_choice" and correct_idx not in [i for i, _ in filled]:
+    elif qtype in ("multiple_choice", "multi_select") and len(filled) < 2:
+        st.warning("This question type needs at least two options.")
+    elif qtype == "multiple_choice" and not correct_set <= filled_idx:
         st.warning("The option marked correct must not be empty.")
-    elif qtype == "free_response" and not free_response_answer.strip():
-        st.warning("Please enter a correct free-response answer.")
+    elif qtype == "multi_select" and not correct_set:
+        st.warning("Select at least one correct option.")
+    elif qtype == "multi_select" and not correct_set <= filled_idx:
+        st.warning("Every option marked correct must be filled in.")
+    elif qtype == "fill_in_blank" and not (free_response_answer or "").strip():
+        st.warning("Please enter the correct answer for the blank.")
+    elif (
+        qtype == "free_response"
+        and not manual_grading
+        and not (free_response_answer or "").strip()
+    ):
+        st.warning(
+            "Please enter a correct free-response answer, or choose "
+            "manual grading."
+        )
     else:
         try:
             # One transaction: the exercise and all its options succeed or fail together.
@@ -86,8 +162,8 @@ if st.button("Add exercise"):
                     (
                         unit["unit_id"],
                         question.strip(),
-                        qtype,
-                        difficulty.strip(),
+                        DB_TYPE_VALUES[qtype],
+                        difficulty,
                         free_response_answer.strip()
                         if free_response_answer is not None else None,
                         int(points),
@@ -97,7 +173,7 @@ if st.button("Add exercise"):
                 for i, text in filled:
                     conn.execute(
                         INSERT_CHOICE_SQL,
-                        (new_id, text, i == correct_idx, i + 1)
+                        (new_id, text, i in correct_set, i + 1)
                     )
 
             st.success(f"Exercise #{new_id} added.")

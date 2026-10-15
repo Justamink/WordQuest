@@ -6,6 +6,9 @@ from db import query, get_conn, friendly_error
 st.set_page_config(page_title="Manage Exercises", page_icon="🗂️")
 st.title("🗂️ Manage Exercises")
 
+AUTO_GRADED = "Enter a correct answer (auto-graded)"
+MANUAL_GRADED = "No stored answer (grade manually later)"
+
 # ---------------- SQL ----------------
 SEARCH_SQL = """
 SELECT e.exercise_id, e.question_text, e.question_type,
@@ -162,9 +165,32 @@ except Exception as e:
     st.error(friendly_error(e))
     st.stop()
 
+# Normalize the stored type so values like "Multiple Choice" or
+# "fill-in-the-blank" are still recognized.
+_TYPE_ALIASES = {
+    "fill_in_the_blank": "fill_in_blank",
+    "multiple_select": "multi_select",
+    "multiselect": "multi_select",
+    "short_answer": "free_response",
+}
+_raw_type = (
+    str(target["question_type"]).strip().lower()
+    .replace(" ", "_").replace("-", "_")
+)
+qtype = _TYPE_ALIASES.get(_raw_type, _raw_type)
+
 # ---------------- S3: UPDATE ----------------
 
 st.subheader("Edit an exercise")
+
+if target["num_attempts"] > 0:
+    st.warning(
+        f"⚠️ Students have already submitted {target['num_attempts']} "
+        "attempt(s) on this exercise. Changing the question, answer "
+        "options or correct answer will NOT re-grade those attempts. "
+        "Their saved results stay as they were, so they may no longer "
+        "match the new answer key."
+    )
 
 with st.form(f"edit_form_{target['exercise_id']}"):
 
@@ -173,9 +199,15 @@ with st.form(f"edit_form_{target['exercise_id']}"):
         value=target["question_text"]
     )
 
-    difficulty = st.text_input(
+    # Keep any existing non-standard value selectable so it isn't lost.
+    difficulty_choices = ["easy", "medium", "hard"]
+    if target["difficulty"] not in difficulty_choices:
+        difficulty_choices.append(target["difficulty"])
+
+    difficulty = st.selectbox(
         "Difficulty",
-        value=target["difficulty"]
+        difficulty_choices,
+        index=difficulty_choices.index(target["difficulty"]),
     )
 
     points = st.number_input(
@@ -187,16 +219,41 @@ with st.form(f"edit_form_{target['exercise_id']}"):
 
     free_response_answer = None
     updated_choices = []
-    correct_choice_id = None
+    correct_choice_ids = set()
+    manual_grading = False
 
-    if target["question_type"] == "free_response":
+    if qtype == "fill_in_blank":
 
         free_response_answer = st.text_input(
-            "Correct free-response answer",
+            "Correct answer for the blank",
             value=target["free_response_answer"] or ""
         )
 
-    elif target["question_type"] == "multiple_choice":
+    elif qtype == "free_response":
+
+        has_answer = bool((target["free_response_answer"] or "").strip())
+
+        grading_mode = st.radio(
+            "Grading",
+            [AUTO_GRADED, MANUAL_GRADED],
+            index=0 if has_answer else 1,
+            help=(
+                "Manually graded answers are reviewed by a teacher on the "
+                "Grade Answers page."
+            ),
+        )
+        manual_grading = grading_mode == MANUAL_GRADED
+
+        free_response_answer = st.text_input(
+            "Correct free-response answer (only used if auto-graded)",
+            value=target["free_response_answer"] or ""
+        )
+
+        if manual_grading:
+            # No stored answer for manually graded questions.
+            free_response_answer = None
+
+    elif qtype in ("multiple_choice", "multi_select"):
 
         st.markdown("**Answer options**")
 
@@ -226,18 +283,44 @@ with st.form(f"edit_form_{target['exercise_id']}"):
                 choice_ids[0]
             )
 
-            correct_choice_id = st.radio(
-                "Correct answer",
-                choice_ids,
-                index=choice_ids.index(current_correct),
-                format_func=lambda cid: (
-                    next(
-                        c["choice_text"]
-                        for c in choices
-                        if c["choice_id"] == cid
+            def _choice_label(cid):
+                return next(
+                    c["choice_text"]
+                    for c in choices
+                    if c["choice_id"] == cid
+                )
+
+            if qtype == "multi_select":
+                correct_choice_ids = set(
+                    st.multiselect(
+                        "Correct answers (select all that apply)",
+                        choice_ids,
+                        default=[
+                            c["choice_id"] for c in choices if c["is_correct"]
+                        ],
+                        format_func=_choice_label,
                     )
-                ),
-            )
+                )
+            else:
+                correct_choice_ids = {
+                    st.radio(
+                        "Correct answer",
+                        choice_ids,
+                        index=choice_ids.index(current_correct),
+                        format_func=_choice_label,
+                    )
+                }
+
+    else:
+        st.info(
+            f"The question type '{target['question_type']}' isn't "
+            "recognized, so its answer can't be edited here. Expected one "
+            "of: multiple_choice, multi_select, fill_in_blank, "
+            "free_response."
+        )
+
+    if qtype in ("multiple_choice", "multi_select") and not choices:
+        st.info("This exercise has no answer options saved yet.")
 
     save = st.form_submit_button("Save changes")
 
@@ -249,10 +332,26 @@ if save:
         st.warning("Difficulty cannot be empty.")
 
     elif (
-        target["question_type"] == "free_response"
+        qtype == "fill_in_blank"
         and not (free_response_answer or "").strip()
     ):
-        st.warning("Please enter a correct free-response answer.")
+        st.warning("Please enter the correct answer for the blank.")
+
+    elif (
+        qtype == "free_response"
+        and not manual_grading
+        and not (free_response_answer or "").strip()
+    ):
+        st.warning(
+            "Please enter a correct free-response answer, or choose "
+            "manual grading."
+        )
+
+    elif (
+        qtype == "multi_select"
+        and not correct_choice_ids
+    ):
+        st.warning("Select at least one correct answer.")
 
     elif any(
         not text.strip()
@@ -271,7 +370,7 @@ if save:
                         difficulty.strip(),
                         int(points),
                         (
-                            free_response_answer.strip()
+                            (free_response_answer.strip() or None)
                             if free_response_answer is not None
                             else None
                         ),
@@ -284,7 +383,7 @@ if save:
                         UPDATE_CHOICE_SQL,
                         (
                             text.strip(),
-                            choice_id == correct_choice_id,
+                            choice_id in correct_choice_ids,
                             choice_id,
                             target["exercise_id"],
                         )
