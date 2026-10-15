@@ -111,10 +111,10 @@ INSERT INTO "ClassSection" (CRN, course_id, section_number, semester, year, teac
 (506393, 19, 1072, 'Summer 2', 2025, 1);
 
 INSERT INTO "Topic" (class_id, name, description, display_order) VALUES
-(1, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
-(2, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
-(3, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
-(6, 'Grammar', 'Sentance construction, comma rules, parts of a sentance, etc.', 1),
+(1, 'Grammar', 'Sentence construction, comma rules, parts of a sentence, etc.', 1),
+(2, 'Grammar', 'Sentence construction, comma rules, parts of a sentence, etc.', 1),
+(3, 'Grammar', 'Sentence construction, comma rules, parts of a sentence, etc.', 1),
+(6, 'Grammar', 'Sentence construction, comma rules, parts of a sentence, etc.', 1),
 (14, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of prose, etc.', 2),
 (3, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of a story, etc.', 2),
 (10, 'Reading Comprehension', 'Critical thinking, analysis themes, parts of a story, etc.', 2),
@@ -144,7 +144,6 @@ INSERT INTO "Badge" (topic_id, name, description, badge_type, requirement_value)
 (9, 'answer_50_questions_correctly', 'Correctly answer a total of 50 questions', 'questions', 50),
 (10, 'answer_100_questions_correctly', 'Correctly answer a total of 100 questions', 'questions', 100);
 
-
 INSERT INTO "StudentBadge" (student_id, badge_id, earned_at) VALUES
 (11, 3, '2025-08-08'),
 (10, 4, '2023-10-15'),
@@ -166,7 +165,6 @@ INSERT INTO "StudentBadge" (student_id, badge_id, earned_at) VALUES
 (9, 1, '2026-10-02'),
 (4, 2, '2026-09-17'),
 (13, 7, '2024-10-28');  
-
 
 
 
@@ -199,41 +197,41 @@ INSERT INTO "PracticeUnit" (topic_id, title, description, difficulty, is_publish
 (15, 'Vocabulary Practice', 'Multiple choice vocab practice', 'very easy', FALSE, FALSE, 8),
 (10, 'Creative Writing', 'Writing practice using expressive literary elements', 'medium', TRUE, TRUE, 15),
 (5, 'Reading comprehension', 'Reading comprehension questions', 'easy', TRUE, TRUE, 18),
-(2, 'Parts of a sentance', 'Multiple choice parts of a sentance practice', 'easy', FALSE, TRUE, 10),
-(12, 'Theme analsysis', 'Analyzing writing for themes and creative writing', 'medium', TRUE, TRUE, 17),
-(3, 'Sentance diagraming', 'Challenging sentance diagramming grammer questions', 'very hard', TRUE, FALSE, 18),
+(2, 'Parts of a sentence', 'Multiple choice parts of a sentence practice', 'easy', FALSE, TRUE, 10),
+(12, 'Theme analysis', 'Analyzing writing for themes and creative writing', 'medium', TRUE, TRUE, 17),
+(3, 'Sentence diagraming', 'Challenging sentence diagramming grammar questions', 'very hard', TRUE, FALSE, 18),
 (13, 'Story structure', 'Multiple choice story structure questions', 'easy', FALSE, TRUE, 9),
 (15, 'Vocabulary - Spelling', 'Spelling challenging, new vocabulary words', 'hard', FALSE, TRUE, 14),
 (6, 'Reading practice', 'Critical thinking and paragraph analysis', 'easy', TRUE, FALSE, 13),
 (7, 'Reading practice', 'Critical thinking and paragraph analysis', 'easy', TRUE, FALSE, 13),
 (19, 'MLA Citations', 'Practice citing sources in MLA format', 'medium', FALSE, FALSE, 9),
 (18, 'Credible Sources', 'Identify which sources are credible', 'very easy', FALSE, FALSE, 1),
-(3, 'Comma Practice', 'Apply comma rules to sentances', 'hard', TRUE, TRUE, 7),
+(3, 'Comma Practice', 'Apply comma rules to sentences', 'hard', TRUE, TRUE, 7),
 (19, 'Primary/secondary Sources', 'Identify which sources are primary and which are secondary', 'easy', FALSE, FALSE, 1),
-(13, 'Independent and Dependent clauses', 'Identify which choices are independent claues and which are dependent clauses', 'hard', TRUE, FALSE, 12),
-(7, 'Meaning of Shakespere', 'Analyze a Shakespeare passage and discuss the meaning free response', 'very hard', TRUE, FALSE, 17),
-(12, 'Literary devices', 'Identify the literary devide fill in the blank', 'medium', TRUE, TRUE, 10),
-(9, 'Literary devices', 'Identify the literary devide fill in the blank', 'medium', TRUE, TRUE, 10);
+(13, 'Independent and Dependent clauses', 'Identify which choices are independent clauses and which are dependent clauses', 'hard', TRUE, FALSE, 12),
+(7, 'Meaning of Shakespeare', 'Analyze a Shakespeare passage and discuss the meaning free response', 'very hard', TRUE, FALSE, 17),
+(12, 'Literary devices', 'Identify the literary device fill in the blank', 'medium', TRUE, TRUE, 10),
+(9, 'Literary devices', 'Identify the literary device fill in the blank', 'medium', TRUE, TRUE, 10);
 
 INSERT INTO "Exercise" (unit_id, question_text, question_type, difficulty, free_response_answer, points) VALUES
-(10, 'Analyze this passage and identify uses of literary devices', 'free respnse', 'easy', '', 59),
-(11, 'Explain what the word "Proclivity" means in your own words', 'free respnse', 'medium', '', 7),
-(2, 'Explain where the comma should go in this sentance and why', 'free respnse', 'easy', '', 44),
-(19, 'From the below, select the correct MLA citation', 'multiple choice', 'hard', '', 86),
-(7, 'You combine two indepenednt clauses with a _____', 'fill in the blank', 'easy', '', 47),
-(19, 'Explain how the author uses descriptive prose and imagary to create the setting in this passage', 'free respnse', 'hard', '', 33),
-(9, 'Write a paragraph that uses three literary devices', 'free respnse', 'hard', '', 70),
+(10, 'Analyze this passage and identify uses of literary devices', 'free response', 'easy', '', 59),
+(11, 'Explain what the word "Proclivity" means in your own words', 'free response', 'medium', '', 7),
+(2, 'Explain where the comma should go in this sentence and why', 'free response', 'easy', '', 44),
+(19, 'From the below options, select the correct MLA citation', 'multiple choice', 'hard', '', 86),
+(7, 'You combine two independent clauses with a _____', 'fill in the blank', 'easy', '', 47),
+(19, 'Explain how the author uses descriptive prose and imagery to create the setting in this passage', 'free response', 'hard', '', 33),
+(9, 'Write a paragraph that uses three literary devices', 'free response', 'hard', '', 70),
 (11, 'A ____ is a person, place, or thing', 'fill in the blank', 'easy', '', 3),
-(14, 'Select the complete sentance', 'multiple choice', 'very easy', '', 39),
-(7, 'Choose all that are a run-on sentance', 'multi select', 'easy', '', 29),
+(14, 'Select the complete sentence', 'multiple choice', 'very easy', '', 39),
+(7, 'Choose all that are a run-on sentence', 'multi select', 'easy', '', 29),
 (13, 'Choose the correct definition for "facetious"', 'multiple choice', 'medium', '', 33),
 (15, 'Choose all nouns', 'multi select', 'very easy', '', 96),
 (2, 'Choose the verb from the following options', 'multiple choice', 'very easy', '', 99),
-(18, 'From the below sentance, enter the indirect object', 'fill in the blank', 'very hard', '', 93),
-(5, 'From the below sentance, enter a preposition', 'fill in the blank', 'easy', '', 84),
-(13, 'Enter the conjuntion that makes the most sense in this sentance', 'fill in the blank', 'medium', '', 65),
-(2, 'Select the sentance that is not in the passive voice', 'multiple choice', 'very hard', '', 97),
-(11, 'Select all sentances in the active voice', 'multi select', 'hard', '', 10),
+(18, 'From the below sentence, enter the indirect object', 'fill in the blank', 'very hard', '', 93),
+(5, 'From the below sentence, enter a preposition', 'fill in the blank', 'easy', '', 84),
+(13, 'Enter the conjunction that makes the most sense in this sentence', 'fill in the blank', 'medium', '', 65),
+(2, 'Select the sentence that is not in the passive voice', 'multiple choice', 'very hard', '', 97),
+(11, 'Select all sentences in the active voice', 'multi select', 'hard', '', 10),
 (9, 'Select all of the prepositions', 'multi select', 'very easy', '', 49),
 (11, 'Select all the adverbs', 'multi select', 'very easy', '', 14);
 
@@ -247,10 +245,10 @@ INSERT INTO "StudentProgress" (student_id, exercise_id, submitted_answer, is_cor
 (12, 19, '', TRUE, 1, '2023-07-03'),
 (20, 13, 'The word "Proclivity" means aptitude or ability in a particular subject ', TRUE, 7, '2023-02-07'),
 (15, 16, '', TRUE, 3, '2026-08-17'),
-(2, 12, 'This is an example of aliteration because words starting with the same letter are used in sequence.', FALSE, 2, '2022-04-19'),
+(2, 12, 'This is an example of alliteration because words starting with the same letter are used in sequence.', FALSE, 2, '2022-04-19'),
 (18, 11, '', FALSE, 1, '2023-02-06'),
 (20, 7, '', TRUE, 3, '2025-01-31'),
-(4, 20, 'The author used metaphor and simily to invoke images of a dark and stormy night to create the setting', TRUE, 10, '2022-08-22'),
+(4, 20, 'The author used metaphor and simile to invoke images of a dark and stormy night to create the setting', TRUE, 10, '2022-08-22'),
 (8, 15, '', TRUE, 10, '2023-07-13'),
 (13, 16, '', TRUE, 2, '2022-07-22'),
 (11, 6, 'The semicolon should go between the words "that" and "however"', FALSE, 9, '2026-04-08'),
@@ -266,7 +264,7 @@ INSERT INTO "AnswerChoice" (exercise_id, choice_text, is_correct, display_order)
 (11, 'so', TRUE, 4),
 (5, 'or', TRUE, 1),
 (16, 'thus', TRUE, 10),
-(7, 'Aliteration', TRUE, 1),
+(7, 'Alliteration', TRUE, 1),
 (16, 'Metaphor', TRUE, 8),
 (6, 'Simile', FALSE, 4),
 (2, 'MLA', FALSE, 3),
@@ -277,6 +275,6 @@ INSERT INTO "AnswerChoice" (exercise_id, choice_text, is_correct, display_order)
 (17, 'slow', TRUE, 1),
 (4, 'Virginia Tech', FALSE, 10),
 (5, 'ran', TRUE, 9),
-(16, 'past-tense', TRUE, 7),
+(16, 'past tense', TRUE, 7),
 (3, 'Independent clause', FALSE, 9),
 (2, 'Colon', TRUE, 4);
