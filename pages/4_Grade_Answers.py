@@ -7,14 +7,20 @@ st.set_page_config(page_title="Grade Answers", page_icon="✅")
 st.title("✅ Grade Answers")
 
 # ---------------- SQL ----------------
-UNGRADED_SQL = """
+# Add Exercise stores "free response" (with a space), but older rows may use
+# "free_response". Normalizing both makes the match work either way.
+FREE_RESPONSE_FILTER = (
+    "REPLACE(LOWER(e.question_type), ' ', '_') = 'free_response'"
+)
+
+UNGRADED_SQL = f"""
 SELECT sp.progress_id,
        s.first_name || ' ' || s.last_name AS name,
        e.question_text, sp.submitted_answer, sp.answered_at
 FROM "StudentProgress" sp
 JOIN "Student" s ON s.student_id = sp.student_id
 JOIN "Exercise" e ON e.exercise_id = sp.exercise_id
-WHERE e.question_type = 'free_response'
+WHERE {FREE_RESPONSE_FILTER}
 ORDER BY sp.answered_at;
 """
 
@@ -24,14 +30,14 @@ SET is_correct = %s
 WHERE progress_id = %s;
 """
 
-GRADED_SQL = """
+GRADED_SQL = f"""
 SELECT sp.progress_id,
        s.first_name || ' ' || s.last_name AS name,
        e.question_text, sp.submitted_answer, sp.is_correct
 FROM "StudentProgress" sp
 JOIN "Student" s ON s.student_id = sp.student_id
 JOIN "Exercise" e ON e.exercise_id = sp.exercise_id
-WHERE e.question_type = 'free_response'
+WHERE {FREE_RESPONSE_FILTER}
 ORDER BY sp.answered_at DESC
 LIMIT 10;
 """
