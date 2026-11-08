@@ -47,6 +47,37 @@ CREATE TABLE IF NOT EXISTS public."Teacher"
     CONSTRAINT teacher_email UNIQUE (email)
 );
 
+-- Authentication identity is separate from the existing student/teacher
+-- profile records. Exactly one profile must be linked for each account.
+CREATE TABLE IF NOT EXISTS public."Account"
+(
+    account_id SERIAL NOT NULL,
+    email text NOT NULL,
+    password_hash text NOT NULL,
+    role text NOT NULL,
+    student_id integer,
+    teacher_id integer,
+    PRIMARY KEY (account_id),
+    CONSTRAINT account_role_valid CHECK (role IN ('student', 'teacher')),
+    CONSTRAINT account_profile_matches_role CHECK (
+        (role = 'student' AND student_id IS NOT NULL AND teacher_id IS NULL)
+        OR
+        (role = 'teacher' AND teacher_id IS NOT NULL AND student_id IS NULL)
+    ),
+    CONSTRAINT account_student_unique UNIQUE (student_id),
+    CONSTRAINT account_teacher_unique UNIQUE (teacher_id),
+    CONSTRAINT account_email_unique UNIQUE (email),
+    CONSTRAINT account_email_not_blank CHECK (length(trim(email)) > 0),
+    CONSTRAINT account_student_fk FOREIGN KEY (student_id)
+        REFERENCES public."Student" (student_id),
+    CONSTRAINT account_teacher_fk FOREIGN KEY (teacher_id)
+        REFERENCES public."Teacher" (teacher_id)
+);
+
+-- Treat email addresses case-insensitively for account uniqueness.
+CREATE UNIQUE INDEX IF NOT EXISTS account_email_case_insensitive_unique
+    ON public."Account" (lower(email));
+
 CREATE TABLE IF NOT EXISTS public."ClassSection"
 (
     class_id SERIAL NOT NULL,

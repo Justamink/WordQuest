@@ -5,17 +5,20 @@ Run with:  streamlit run app.py
 import streamlit as st
 
 from db import query, friendly_error
+from auth import require_login
 
 st.set_page_config(page_title="WordQuest", page_icon="🧭", layout="wide")
 
-# ---------------- SQL ----------------
-STUDENTS_SQL = """
-SELECT student_id, first_name, last_name,
-       first_name || ' ' || last_name AS name
-FROM "Student"
-ORDER BY last_name, first_name;
-"""
+if not require_login():
+    st.stop()
 
+account = st.session_state["account"]
+if account["role"] == "teacher": #!= "student"
+    st.title("WordQuest")
+    st.info("You are signed in as a teacher. Teacher pages will be available here.")
+    st.stop()
+
+# ---------------- SQL ----------------
 STATS_SQL = """
 SELECT COUNT(*) AS attempts,
        COUNT(*) FILTER (WHERE is_correct) AS correct,
@@ -118,37 +121,16 @@ except Exception as e:  # noqa: BLE001
     st.error(friendly_error(e))
     st.stop()
 
-# ---------------- Header + "log in" selector ----------------
-students = load(STUDENTS_SQL)
-
-head_left, head_right = st.columns([3, 2], vertical_alignment="bottom")
-
+# ---------------- Authenticated student dashboard ----------------
+student_id = account["student_id"]
+head_left, _head_right = st.columns([3, 2], vertical_alignment="bottom")
 with head_left:
     st.title("🧭 WordQuest")
     st.caption(
         "Practice English with topic-based exercises, earn badges, and give "
         "teachers insight into where students need more practice."
     )
-
-if not students:
-    st.info("No students in the database yet.")
-    st.stop()
-
-by_id = {s["student_id"]: s for s in students}
-ids = list(by_id)
-if st.session_state.get("current_student_id") not in by_id:
-    st.session_state["current_student_id"] = ids[0]
-
-with head_right:
-    student_id = st.selectbox(
-        "Logged in as",
-        ids,
-        key="current_student_id",
-        format_func=lambda i: by_id[i]["name"],
-    )
-
-student = by_id[student_id]
-st.subheader(f"Welcome back, {student['first_name']}! 👋")
+st.subheader(f"Welcome back, {account['first_name']}! 👋")
 
 # ---------------- Load this student's data ----------------
 stats = load(STATS_SQL, (student_id,))[0]
