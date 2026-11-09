@@ -44,6 +44,54 @@ INSERT INTO "Teacher" (first_name, last_name, email) VALUES
 ('Arthur', 'Welch', 'Caleb.Kuvalis74@yahoo.com'),
 ('Simon', 'Gleichner', 'Mozell_Buckridge74@gmail.com');
 
+-- Development seed credentials: WordQuestDemo1! (each hash has its own salt, making each stored hash different), updated in Neon
+INSERT INTO "Account" (email, password_hash, role, student_id, teacher_id)
+SELECT seed.email, seed.password_hash, seed.role, s.student_id, t.teacher_id
+FROM (VALUES
+    ('Violet82@yahoo.com', 'scrypt$16384$8$1$zAbV01jak0yuefMRWAu65w==$TCD7mesRe947dCpr2lcHN3XwXhQ4cHXNhm-QJCUvD-w=', 'student'),
+    ('Shelley17@yahoo.com', 'scrypt$16384$8$1$sSYnb9HUq2l9hHh85-hZrQ==$f4oJmrNgaiKHAhvEH9I2uZSBzXLzZpVsMUadz4EFp9g=', 'student'),
+    ('Rene.Hirthe-Bartoletti28@hotmail.com', 'scrypt$16384$8$1$R7o4MxAr_OML8kHZSbb8BQ==$_7EeN7v9BjQTk3rOx-i9oBSgV9hJKsJfl9EGJAVFmx8=', 'student'),
+    ('Sydney_Johnson-Crooks@yahoo.com', 'scrypt$16384$8$1$5NDD8bzEjkhBfNIFZuPYEw==$eBJAQ_OL7fivlKrhbgTpwbCAyFyDcMGN6OQRqMobApA=', 'student'),
+    ('Avery_Ankunding@gmail.com', 'scrypt$16384$8$1$-bVaEimsMpa78F1wV5cLTA==$K6PI7A7IVQ3pgrvLKhSvs79G3UW5a97wNgIUt3Drrxw=', 'student'),
+    ('Lamar45@hotmail.com', 'scrypt$16384$8$1$ntw1Ig9AU4Sf4BVZ6D_nqg==$keoCj57tiNFs26X7hrAosgl08EwVMjq802SUtltXl3c=', 'student'),
+    ('Emmanuel88@hotmail.com', 'scrypt$16384$8$1$Q09ZFe8-tvaefLV9CiDijg==$VncpUqEsGFyVIcf7Z2twB8tePAs_oqW4zqOjrvUppjQ=', 'student'),
+    ('Dannie_Gibson20@yahoo.com', 'scrypt$16384$8$1$EIv7VFWA9p0rDaAlc5djXQ==$A3VIdEpV_w-vA8vMPHKjjcfKAFzEg-UjkW6PQCddmm8=', 'student'),
+    ('Kelsi.Feest@hotmail.com', 'scrypt$16384$8$1$Su9r0uwyHDtlpUiLtbWMhA==$7Mv_9twGLmLvCOrNl8v3_NeK2mqC4ktvtiV3Tb_HwuA=', 'student'),
+    ('Herbert84@yahoo.com', 'scrypt$16384$8$1$t653Uke_pc_saDOJi4H3rw==$cVVovkAOPKzoW7kK2F4Ca75wzJS36praaXv7NoyrPc4=', 'student'),
+    ('Kirk.Hane@yahoo.com', 'scrypt$16384$8$1$YNfnbHNSaKn7xCBvYY5Kig==$MyZATDk8JqD2wglWtqU88FeB_Q26XfXJFD2ajeJg2dA=', 'student'),
+    ('Bell51@yahoo.com', 'scrypt$16384$8$1$l5B_u1V0d_5fisC5YWWUeQ==$56-OMfXugWGyr5GEtUtRoA9FGnJMTmzJAdsw-p3N8AA=', 'student'),
+    ('Wilfrid.Daniel@gmail.com', 'scrypt$16384$8$1$TdZi2H58WdjHiMF2nCtQEw==$dnj20ZuE3eFK6h3erZUOHH0G9nush9t5qLfpXsxcdko=', 'student'),
+    ('Mathilde65@hotmail.com', 'scrypt$16384$8$1$lg2ac9Sb1QttBnGRqzhB3w==$RmNNwfSvj_S2WG3Jmi5XNWBcNLjaRgL3duDGMxD_sog=', 'student'),
+    ('Daphnee92@yahoo.com', 'scrypt$16384$8$1$-HWF1ABIuxwEFzu4m9DCZQ==$J192yotw9Zkk2Wxg4USMeDfieSBP8ewCO4lPNJNsBb8=', 'student'),
+    ('Harmon47@gmail.com', 'scrypt$16384$8$1$OBQOCKXFyuoB6JXqz9rzKQ==$Juer2jBRRjkLc3YxE9pQtSDQUEK6WGhw0E9eCBq23uI=', 'student'),
+    ('Susan_Lehner@yahoo.com', 'scrypt$16384$8$1$xLMpghRkkScmhCqq_w6brA==$FEywYu3918RHU7ftgrT10zudRINA-9Dvu4NU6S73MBU=', 'student'),
+    ('Dax.Marvin11@gmail.com', 'scrypt$16384$8$1$7XgeW_FmYQOxNHhL2PxxCQ==$M6g7W7ecvmbWJ4WnlJLflWjtT0KAAH2OZP6Y0YNtFqY=', 'student'),
+    ('Alda61@gmail.com', 'scrypt$16384$8$1$rRsawOWKQh8z2dXYj1POLw==$slV0-XjpRWDUPexKwkHJiFviB8XsjymIWlLm85zmKNw=', 'student'),
+    ('Leopoldo.Okuneva@gmail.com', 'scrypt$16384$8$1$SFeVIIB2R-trM_3vX1typw==$vWAottAcKJQcKjHUSYkyxRDDs0iqR-72diu_hTtY62g=', 'student'),
+    ('Giles39@hotmail.com', 'scrypt$16384$8$1$kkgdY8QeOcggL-bRfigJLA==$q_eO3jnJTZ_5g5FHthLH7wVBm5X8ezAnSibbBjxplaA=', 'teacher'),
+    ('Lucile_Zieme@gmail.com', 'scrypt$16384$8$1$c2fl1BMqdOU0OTsOcm2o_w==$InK15rR3v-MULo-C2y-K45fERy5R2PoPvECSDcMJrDE=', 'teacher'),
+    ('Verona82@gmail.com', 'scrypt$16384$8$1$sW9nR0IEEHOCD2-j-UB_Ag==$QE8ORZ1TspSEsiQ9VneyxBQY2672wQnKdyt-AgmDnlA=', 'teacher'),
+    ('Leta_Beatty11@yahoo.com', 'scrypt$16384$8$1$XjdE9KbTgHkC9WKpOK42IQ==$DY2qvVrIJeLYTYz4DNO5TAggdsq27krEfG3BmGI-JQQ=', 'teacher'),
+    ('Mya.Frami@yahoo.com', 'scrypt$16384$8$1$dAhztVCWK7hnJ3nnoeBzag==$WhYzvRjOAFlY4qQW3nGLn744eqM-q5RFuSbusG6Mv3I=', 'teacher'),
+    ('Dominic.Goyette@yahoo.com', 'scrypt$16384$8$1$v5cLkru9-93bhDv5LY5nEQ==$8kUUeiKqHo3yR2ZBVHfScP04KQOnGTioRklSm-8q4rY=', 'teacher'),
+    ('Deja.Adams51@gmail.com', 'scrypt$16384$8$1$7AxjhYY2v_IQyV50482cNA==$IDWBNEdb1u73mC0MzMXRxR6MKoPoS1W9d5QJR5NLzaU=', 'teacher'),
+    ('Kailey44@gmail.com', 'scrypt$16384$8$1$W1yrz0zzn-MLfpJ9BUOzYA==$5nvICAbMvmhPW8vEOjWn8VTOW2I3lkWeJhoEVm-TsbU=', 'teacher'),
+    ('Nakia_Schmidt2@gmail.com', 'scrypt$16384$8$1$krga5AKRLvT6gGkZFDToaw==$oXAGWEuACqlD_lMWTMkYzy2n8tnbGqsVb8CrdVq7tNA=', 'teacher'),
+    ('Gretchen.Corkery@yahoo.com', 'scrypt$16384$8$1$M638kHOO75QjRWkELV2OFA==$U3vtrYBK7hTeHBllyLJnkQliR8tP3fA_I4K5JjECroU=', 'teacher'),
+    ('Chanel.Jast33@yahoo.com', 'scrypt$16384$8$1$2b6wCvncxeI7iN-rVfVFsQ==$hR3P2LZjps6A73KvGNJ_KOKLtUVx0gfKzvaESrtM2N4=', 'teacher'),
+    ('Petra_Fadel@hotmail.com', 'scrypt$16384$8$1$AdKu7McuwhH-krNCg9U-sQ==$uTjzUcdb9phLucR5iKtyDxtAqI2Vio3qQc0h5AS4sS8=', 'teacher'),
+    ('April67@yahoo.com', 'scrypt$16384$8$1$E-vl4ZSHkocdbYkXxZON-A==$79-7a3j4sdrdM4Bf7I_waQXVtgsXYd38-ijbJDW5aRY=', 'teacher'),
+    ('Belle.Wolff@gmail.com', 'scrypt$16384$8$1$13cJE4t_U2ApGosJ5E96Uw==$Jt6kCzTXIcJwk0BYeTPK-uBHfj3zRUcoWfLrZqXo2UY=', 'teacher'),
+    ('Breana_Kassulke@hotmail.com', 'scrypt$16384$8$1$xdxSSU8-egRuq0FyYMHM4w==$8CXcrAGKNwLpta_OVzgSkwyOmcJWTmEdIoM1F-8irXo=', 'teacher'),
+    ('Woodrow_Roob22@gmail.com', 'scrypt$16384$8$1$3kzdVbkad3vziNi9KoSS8A==$Ca2qRfsulA3Yz1gBheMY4Q47gHNxlxpkk9SBmjjolus=', 'teacher'),
+    ('Freddy_Bergnaum25@yahoo.com', 'scrypt$16384$8$1$WKGUKRfapI3ke5mnG0wWwA==$Jncyr7SY01UuSIoMV71TauHPxsta6o211EwIn2CrJPM=', 'teacher'),
+    ('Evangeline.Dooley@yahoo.com', 'scrypt$16384$8$1$5EUxo1AHdehXSnTUmQsFiw==$8IB2tIBwIzijRRri993pDKALRvbK8wPH2DduDPesKdg=', 'teacher'),
+    ('Caleb.Kuvalis74@yahoo.com', 'scrypt$16384$8$1$GoBVzQngzHRVDDJ-Oo2D_w==$ePOKT585Szj51y7ADAeEO4Mwo_mmEqCszfBriQh9XVI=', 'teacher'),
+    ('Mozell_Buckridge74@gmail.com', 'scrypt$16384$8$1$CoQEyL0b5tVJUrD53c5g6A==$qn3mXMfLYrOmGm7ejN-rbfy5-g1Ml2jKdcYXYBlqTzM=', 'teacher')
+) AS seed(email, password_hash, role)
+LEFT JOIN public."Student" s ON seed.role = 'student' AND lower(s.email) = lower(seed.email)
+LEFT JOIN public."Teacher" t ON seed.role = 'teacher' AND lower(t.email) = lower(seed.email);
+
 INSERT INTO "Streak" (student_id, current_streak, longest_streak, last_practice_day) VALUES
 (1, 22, 14, '2025-12-31'),
 (2, 41, 32, '2025-04-26'),
