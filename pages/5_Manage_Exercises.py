@@ -2,9 +2,11 @@
 import streamlit as st
 
 from db import query, get_conn, friendly_error
+from auth import require_role
 
 st.set_page_config(page_title="Manage Exercises", page_icon="🗂️")
 st.title("🗂️ Manage Exercises")
+account = require_role("teacher")
 
 AUTO_GRADED = "Enter a correct answer (auto-graded)"
 MANUAL_GRADED = "No stored answer (grade manually later)"
@@ -22,7 +24,10 @@ SELECT e.exercise_id, e.question_text, e.question_type,
         WHERE sp.exercise_id = e.exercise_id) AS num_attempts
 FROM "Exercise" e
 JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+JOIN "Topic" t ON t.topic_id = u.topic_id
+JOIN "ClassSection" cs ON cs.class_id = t.class_id
 WHERE e.question_text ILIKE %s
+  AND cs.teacher_id = %s
   AND (%s::text IS NULL OR e.question_type = %s::text)
   AND (%s::text IS NULL OR e.difficulty = %s::text)
   AND (%s::int IS NULL OR e.unit_id = %s::int)
@@ -30,54 +35,113 @@ ORDER BY e.exercise_id;
 """
 
 TYPES_SQL = """
-SELECT DISTINCT question_type FROM "Exercise" ORDER BY question_type;
+SELECT DISTINCT e.question_type
+FROM "Exercise" e
+JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+JOIN "Topic" t ON t.topic_id = u.topic_id
+JOIN "ClassSection" cs ON cs.class_id = t.class_id
+WHERE cs.teacher_id = %s
+ORDER BY e.question_type;
 """
 
 DIFFICULTIES_SQL = """
-SELECT DISTINCT difficulty FROM "Exercise" ORDER BY difficulty;
+SELECT DISTINCT e.difficulty
+FROM "Exercise" e
+JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+JOIN "Topic" t ON t.topic_id = u.topic_id
+JOIN "ClassSection" cs ON cs.class_id = t.class_id
+WHERE cs.teacher_id = %s
+ORDER BY e.difficulty;
 """
 
 UNITS_SQL = """
-SELECT unit_id, title FROM "PracticeUnit" ORDER BY title, unit_id;
+SELECT u.unit_id, u.title
+FROM "PracticeUnit" u
+JOIN "Topic" t ON t.topic_id = u.topic_id
+JOIN "ClassSection" cs ON cs.class_id = t.class_id
+WHERE cs.teacher_id = %s
+ORDER BY u.title, u.unit_id;
 """
 
 CHOICES_SQL = """
-SELECT choice_id, choice_text, is_correct
-FROM "AnswerChoice"
-WHERE exercise_id = %s
+SELECT a.choice_id, a.choice_text, a.is_correct
+FROM "AnswerChoice" a
+WHERE a.exercise_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "Exercise" e
+      JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+      JOIN "Topic" t ON t.topic_id = u.topic_id
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      WHERE e.exercise_id = a.exercise_id AND cs.teacher_id = %s
+  )
 ORDER BY display_order NULLS LAST, choice_id;
 """
 
 UPDATE_SQL = """
-UPDATE "Exercise"
+UPDATE "Exercise" AS e
 SET question_text = %s,
     difficulty = %s,
     points = %s,
     free_response_answer = %s
-WHERE exercise_id = %s;
+WHERE e.exercise_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "PracticeUnit" u
+      JOIN "Topic" t ON t.topic_id = u.topic_id
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      WHERE u.unit_id = e.unit_id AND cs.teacher_id = %s
+  );
 """
 
 UPDATE_CHOICE_SQL = """
 UPDATE "AnswerChoice"
 SET choice_text = %s,
     is_correct = %s
-WHERE choice_id = %s AND exercise_id = %s;
+WHERE choice_id = %s AND exercise_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "Exercise" e
+      JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+      JOIN "Topic" t ON t.topic_id = u.topic_id
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      WHERE e.exercise_id = "AnswerChoice".exercise_id
+        AND cs.teacher_id = %s
+  );
 """
 
 DELETE_CHOICES_SQL = """
 DELETE FROM "AnswerChoice"
-WHERE exercise_id = %s;
+WHERE exercise_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "Exercise" e
+      JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+      JOIN "Topic" t ON t.topic_id = u.topic_id
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      WHERE e.exercise_id = "AnswerChoice".exercise_id
+        AND cs.teacher_id = %s
+  );
 """
 
 DELETE_SQL = """
-DELETE FROM "Exercise"
-WHERE exercise_id = %s;
+DELETE FROM "Exercise" AS e
+WHERE e.exercise_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "PracticeUnit" u
+      JOIN "Topic" t ON t.topic_id = u.topic_id
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      WHERE u.unit_id = e.unit_id AND cs.teacher_id = %s
+  );
 """
 
 CHECK_ATTEMPTS_SQL = """
 SELECT COUNT(*) AS num_attempts
-FROM "StudentProgress"
-WHERE exercise_id = %s;
+FROM "StudentProgress" sp
+WHERE sp.exercise_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "Exercise" e
+      JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+      JOIN "Topic" t ON t.topic_id = u.topic_id
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      WHERE e.exercise_id = sp.exercise_id AND cs.teacher_id = %s
+  );
 """
 
 # ---------------- UI ----------------
@@ -87,9 +151,14 @@ if "flash" in st.session_state:
 
 # Load filter options from the database.
 try:
-    type_options = [r["question_type"] for r in query(TYPES_SQL)]
-    difficulty_options = [r["difficulty"] for r in query(DIFFICULTIES_SQL)]
-    unit_options = query(UNITS_SQL)
+    type_options = [
+        r["question_type"] for r in query(TYPES_SQL, (account["teacher_id"],))
+    ]
+    difficulty_options = [
+        r["difficulty"]
+        for r in query(DIFFICULTIES_SQL, (account["teacher_id"],))
+    ]
+    unit_options = query(UNITS_SQL, (account["teacher_id"],))
 except Exception as e:  # noqa: BLE001
     st.error(friendly_error(e))
     st.stop()
@@ -132,6 +201,7 @@ try:
         SEARCH_SQL,
         (
             f"%{keyword}%",
+            account["teacher_id"],
             type_filter, type_filter,
             difficulty_filter, difficulty_filter,
             unit_filter, unit_filter,
@@ -159,7 +229,7 @@ target = st.selectbox(
 try:
     choices = query(
         CHOICES_SQL,
-        (target["exercise_id"],)
+        (target["exercise_id"], account["teacher_id"]),
     )
 except Exception as e:
     st.error(friendly_error(e))
@@ -375,6 +445,7 @@ if save:
                             else None
                         ),
                         target["exercise_id"],
+                        account["teacher_id"],
                     )
                 )
 
@@ -386,6 +457,7 @@ if save:
                             choice_id in correct_choice_ids,
                             choice_id,
                             target["exercise_id"],
+                            account["teacher_id"],
                         )
                     )
 
@@ -426,7 +498,7 @@ else:
                 # Recheck before deleting.
                 attempts = conn.execute(
                     CHECK_ATTEMPTS_SQL,
-                    (target["exercise_id"],)
+                    (target["exercise_id"], account["teacher_id"]),
                 ).fetchone()["num_attempts"]
 
                 if attempts > 0:
@@ -438,12 +510,12 @@ else:
                 # Delete answer options first, then the exercise.
                 conn.execute(
                     DELETE_CHOICES_SQL,
-                    (target["exercise_id"],)
+                    (target["exercise_id"], account["teacher_id"]),
                 )
 
                 deleted = conn.execute(
                     DELETE_SQL,
-                    (target["exercise_id"],)
+                    (target["exercise_id"], account["teacher_id"]),
                 ).rowcount
 
                 if deleted != 1:

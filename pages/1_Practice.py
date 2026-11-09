@@ -2,22 +2,21 @@
 import streamlit as st
 
 from db import query, execute, friendly_error
+from auth import require_role
 
 st.set_page_config(page_title="Practice", page_icon="📝")
 st.title("📝 Practice")
+account = require_role("student")
+student_id = account["student_id"]
 
 # ---------------- SQL ----------------
-STUDENTS_SQL = """
-SELECT student_id, first_name || ' ' || last_name AS name
-FROM "Student"
-ORDER BY last_name, first_name;
-"""
-
 TOPICS_SQL = """
 SELECT t.topic_id, t.name AS topic_name, c.course_code
 FROM "Topic" t
 JOIN "ClassSection" cs ON cs.class_id = t.class_id
 JOIN "Course" c ON c.course_id = cs.course_id
+JOIN "Enrollment" en ON en.class_id = cs.class_id
+WHERE en.student_id = %s AND en.status = 'active'
 ORDER BY c.course_code, t.name;
 """
 
@@ -26,6 +25,13 @@ UNITS_SQL = """
 SELECT unit_id, title AS unit_name
 FROM "PracticeUnit"
 WHERE topic_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "Topic" t
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      JOIN "Enrollment" en ON en.class_id = cs.class_id
+      WHERE t.topic_id = "PracticeUnit".topic_id
+        AND en.student_id = %s AND en.status = 'active'
+  )
 ORDER BY title;
 """
 
@@ -37,6 +43,13 @@ SELECT e.exercise_id, e.question_text, e.question_type, e.points,
 FROM "Exercise" e
 JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
 WHERE u.unit_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "Topic" t
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      JOIN "Enrollment" en ON en.class_id = cs.class_id
+      WHERE t.topic_id = u.topic_id
+        AND en.student_id = %s AND en.status = 'active'
+  )
 ORDER BY e.exercise_id;
 """
 
@@ -45,6 +58,15 @@ CHOICES_SQL = """
 SELECT choice_id, choice_text, is_correct
 FROM "AnswerChoice"
 WHERE exercise_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "Exercise" e
+      JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+      JOIN "Topic" t ON t.topic_id = u.topic_id
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      JOIN "Enrollment" en ON en.class_id = cs.class_id
+      WHERE e.exercise_id = "AnswerChoice".exercise_id
+        AND en.student_id = %s AND en.status = 'active'
+  )
 ORDER BY display_order NULLS LAST, choice_id;
 """
 
@@ -55,12 +77,20 @@ INSERT_ATTEMPT_SQL = """
 INSERT INTO "StudentProgress"
     (student_id, exercise_id, submitted_answer, is_correct,
      attempt_number, answered_at)
-VALUES (
+SELECT
     %s, %s, %s, %s,
     (SELECT COUNT(*) + 1
      FROM "StudentProgress"
      WHERE student_id = %s AND exercise_id = %s),
     NOW()
+WHERE EXISTS (
+    SELECT 1 FROM "Exercise" e
+    JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+    JOIN "Topic" t ON t.topic_id = u.topic_id
+    JOIN "ClassSection" cs ON cs.class_id = t.class_id
+    JOIN "Enrollment" en ON en.class_id = cs.class_id
+    WHERE e.exercise_id = %s
+      AND en.student_id = %s AND en.status = 'active'
 )
 RETURNING progress_id;
 """
@@ -70,6 +100,15 @@ SELECT sp.progress_id, sp.attempt_number, sp.submitted_answer,
        sp.is_correct, sp.answered_at
 FROM "StudentProgress" sp
 WHERE sp.student_id = %s AND sp.exercise_id = %s
+  AND EXISTS (
+      SELECT 1 FROM "Exercise" e
+      JOIN "PracticeUnit" u ON u.unit_id = e.unit_id
+      JOIN "Topic" t ON t.topic_id = u.topic_id
+      JOIN "ClassSection" cs ON cs.class_id = t.class_id
+      JOIN "Enrollment" en ON en.class_id = cs.class_id
+      WHERE e.exercise_id = sp.exercise_id
+        AND en.student_id = sp.student_id AND en.status = 'active'
+  )
 ORDER BY sp.answered_at DESC, sp.progress_id DESC
 LIMIT 10;
 """
@@ -110,26 +149,7 @@ def load(sql, params=None):
 
 
 # ---------------- UI ----------------
-students = load(STUDENTS_SQL)
-if not students:
-    st.info("No students in the database yet.")
-    st.stop()
-
-# Shares the "logged in" student with the home page dashboard.
-by_id = {s["student_id"]: s for s in students}
-ids = list(by_id)
-if st.session_state.get("current_student_id") not in by_id:
-    st.session_state["current_student_id"] = ids[0]
-
-student_id = st.selectbox(
-    "Who is answering?",
-    ids,
-    key="current_student_id",
-    format_func=lambda i: by_id[i]["name"],
-)
-student = by_id[student_id]
-
-topics = load(TOPICS_SQL)
+topics = load(TOPICS_SQL, (student_id,))
 if not topics:
     st.info("No topics in the database yet.")
     st.stop()
@@ -141,7 +161,7 @@ topic = st.selectbox(
 )
 
 # Select a practice unit within the chosen topic.
-units = load(UNITS_SQL, (topic["topic_id"],))
+units = load(UNITS_SQL, (topic["topic_id"], student_id))
 if not units:
     st.info("No practice units in this topic yet.")
     st.stop()
@@ -153,7 +173,7 @@ unit = st.selectbox(
 )
 
 # Only display exercises from the selected practice unit.
-exercises = load(EXERCISES_SQL, (unit["unit_id"],))
+exercises = load(EXERCISES_SQL, (unit["unit_id"], student_id))
 if not exercises:
     st.info("No exercises in this practice unit yet.")
     st.stop()
@@ -176,7 +196,7 @@ st.caption(
 
 choices = []
 if qtype in ("multiple_choice", "multi_select"):
-    choices = load(CHOICES_SQL, (ex_id,))
+    choices = load(CHOICES_SQL, (ex_id, student_id))
     if not choices:
         st.info("This exercise has no answer options yet.")
         st.stop()
@@ -259,18 +279,22 @@ if submitted:
 
     if ready:
         try:
-            execute(
+            saved = execute(
                 INSERT_ATTEMPT_SQL,
                 (
-                    student["student_id"],
+                    student_id,
                     ex_id,
                     answer_text,
                     is_correct,
-                    student["student_id"],
+                    student_id,
                     ex_id,
+                    ex_id,
+                    student_id,
                 ),
             )
-            if needs_review:
+            if not saved:
+                st.error("This exercise is no longer available to your account.")
+            elif needs_review:
                 st.success("Answer submitted! Your teacher will review it.")
             elif is_correct:
                 st.success("Correct! 🎉")
@@ -285,7 +309,7 @@ if submitted:
             st.error(friendly_error(e))
 
 st.subheader("Your recent attempts on this exercise")
-recent = load(RECENT_SQL, (student["student_id"], ex_id))
+recent = load(RECENT_SQL, (student_id, ex_id, student_id))
 if recent:
     st.dataframe(recent, hide_index=True, use_container_width=True)
 else:

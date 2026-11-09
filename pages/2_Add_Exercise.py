@@ -2,15 +2,19 @@
 import streamlit as st
 
 from db import query, get_conn, friendly_error
+from auth import require_role
 
 st.set_page_config(page_title="Add Exercise", page_icon="➕")
 st.title("➕ Add Exercise")
+account = require_role("teacher")
 
 # ---------------- SQL ----------------
 UNITS_SQL = """
 SELECT u.unit_id, u.title AS unit_name, t.name AS topic_name
 FROM "PracticeUnit" u
 JOIN "Topic" t ON t.topic_id = u.topic_id
+JOIN "ClassSection" cs ON cs.class_id = t.class_id
+WHERE cs.teacher_id = %s
 ORDER BY t.name, u.title;
 """
 
@@ -52,7 +56,7 @@ AUTO_GRADED = "Enter a correct answer (auto-graded)"
 MANUAL_GRADED = "No stored answer (grade manually later)"
 
 try:
-    units = query(UNITS_SQL)
+    units = query(UNITS_SQL, (account["teacher_id"],))
 except Exception as e:  # noqa: BLE001
     st.error(friendly_error(e))
     st.stop()
