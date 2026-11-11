@@ -309,7 +309,7 @@ if submitted:
             st.error(friendly_error(e))
 
 st.subheader("Your recent attempts on this exercise")
-recent = load(RECENT_SQL, (student_id, ex_id, student_id))
+recent = load(RECENT_SQL, (student_id, ex_id))
 if recent:
     st.dataframe(recent, hide_index=True, use_container_width=True)
 else:
