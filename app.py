@@ -27,6 +27,7 @@ elif account.get("role") == "teacher":
                 icon="🎓",
                 default=True,
             ),
+            st.Page("pages/8_Create_Student.py", title="Create Student", icon="👩‍🎓"),
             st.Page("pages/7_Manage_Units.py", title="Manage Units", icon="📚"),
             st.Page("pages/2_Add_Exercise.py", title="Add Exercise", icon="➕"),
             st.Page("pages/4_Grade_Answers.py", title="Grade Answers", icon="✅"),

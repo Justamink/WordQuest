@@ -80,7 +80,16 @@ def _login(email, password):
     return {key: value for key, value in row.items() if key != "password_hash"}
 
 
-def _create_account(first_name, last_name, email, password, role):
+def _create_account(
+    first_name,
+    last_name,
+    email,
+    password,
+    role,
+    *,
+    class_id=None,
+    class_teacher_id=None,
+):
     """Create a profile and its login account atomically."""
     email = email.strip().lower()
     first_name = first_name.strip()
@@ -88,6 +97,16 @@ def _create_account(first_name, last_name, email, password, role):
     password_hash = hash_password(password)
 
     with get_conn() as conn:
+        if class_id is not None:
+            if role != "student" or class_teacher_id is None:
+                raise ValueError("Only a student account can be assigned to a class.")
+            owned_class = conn.execute(
+                'SELECT 1 FROM "ClassSection" WHERE class_id = %s AND teacher_id = %s;',
+                (class_id, class_teacher_id),
+            ).fetchone()
+            if not owned_class:
+                raise ValueError("That class is not assigned to your teacher account.")
+
         existing = conn.execute(
             """
             SELECT EXISTS (SELECT 1 FROM "Account" WHERE lower(email) = %s)
@@ -131,6 +150,16 @@ def _create_account(first_name, last_name, email, password, role):
             (email, password_hash, role, student_id, teacher_id),
         ).fetchone()
 
+        if class_id is not None:
+            conn.execute(
+                """
+                INSERT INTO "Enrollment"
+                    (student_id, class_id, enrollment_date, status)
+                VALUES (%s, %s, CURRENT_DATE, 'active');
+                """,
+                (student_id, class_id),
+            )
+
     return {
         "account_id": account["account_id"],
         "email": email,
@@ -140,6 +169,21 @@ def _create_account(first_name, last_name, email, password, role):
         "first_name": first_name,
         "last_name": last_name,
     }
+
+
+def create_student_account_for_teacher(
+    first_name, last_name, email, password, teacher_id, class_id
+):
+    """Create a student account and enroll them in the teacher's own class."""
+    return _create_account(
+        first_name,
+        last_name,
+        email,
+        password,
+        "student",
+        class_id=class_id,
+        class_teacher_id=teacher_id,
+    )
 
 
 #visible when user isn't logged in (needs to log in or sign up)
